@@ -509,7 +509,7 @@ struct PosterBoardRecoveryView: View {
                 Text("This removes all current PosterBoard registry entries. The device will restart after the new registry passes verification.")
             }
             .sheet(isPresented: $showShare) {
-                ShareSheet(items: snapshotURLs)
+                ShareSheet(items: snapshotURLs.map { $0 as Any })
             }
         }
     }
