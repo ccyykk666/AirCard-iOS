@@ -462,7 +462,7 @@ struct PosterBoardRecoveryView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Section("Recovery") {
+                Section {
                     Button {
                         Task { await exportSnapshot() }
                     } label: {
@@ -484,6 +484,8 @@ struct PosterBoardRecoveryView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                } header: {
+                    Text("Recovery")
                 } footer: {
                     Text("This replaces the central PosterBoard registry with a clean minimal database, verifies it, stages refresh preferences, then requests a full device restart. Existing unreferenced wallpaper folders are left on disk but are no longer registered.")
                 }
