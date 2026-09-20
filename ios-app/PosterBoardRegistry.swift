@@ -67,7 +67,7 @@ final class PosterBoardRegistry {
         )
 
         guard originalData.count > 100,
-              String(data: originalData.prefix(16), encoding: .ascii)?.hasPrefix("SQLite format 3") == true else {
+              String(decoding: originalData.prefix(16), as: UTF8.self).hasPrefix("SQLite format 3") else {
             throw PosterBoardRegistryError.invalidDatabase
         }
 
@@ -330,7 +330,7 @@ final class PosterBoardRegistry {
               let text = sqlite3_column_text(statement, 0) else {
             throw PosterBoardRegistryError.sqlite(String(cString: sqlite3_errmsg(db)))
         }
-        return String(cString: text)
+        return String(cString: UnsafeRawPointer(text).assumingMemoryBound(to: CChar.self))
     }
 
     private func quote(_ value: String) -> String {
