@@ -168,6 +168,58 @@ pub unsafe extern "C" fn al_exploit_inject_folder(
     }
 }
 
+
+/// Read a file from outside the Media sandbox via the AirTraffic move primitive.
+/// The returned byte buffer must be released with al_afc_free_bytes.
+///
+/// # Safety
+/// All pointer arguments must be null or valid for their documented use.
+#[no_mangle]
+pub unsafe extern "C" fn al_airlift_extract(
+    pairing_path: *const c_char,
+    device_path: *const c_char,
+    log_cb: exploit::ALLogCallback,
+    ctx: *mut c_void,
+    out_data: *mut *mut u8,
+    out_len: *mut usize,
+    out_error: *mut *mut c_char,
+) -> i32 {
+    let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        exploit::extract_file(
+            pairing_path,
+            device_path,
+            log_cb,
+            ctx,
+            out_data,
+            out_len,
+            out_error,
+        )
+    }));
+    match res {
+        Ok(rc) => rc,
+        Err(e) => {
+            if !out_error.is_null() {
+                *out_error = ffi_util::cstr(format!("Rust panic in al_airlift_extract: {e:?}"));
+            }
+            1
+        }
+    }
+}
+
+/// Free a byte buffer returned by al_airlift_extract.
+///
+/// # Safety
+/// ptr/len must match a buffer returned once by al_airlift_extract.
+#[no_mangle]
+pub unsafe extern "C" fn al_afc_free_bytes(ptr: *mut u8, len: usize) {
+    if ptr.is_null() {
+        return;
+    }
+    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        drop(Vec::from_raw_parts(ptr, len, len));
+    }));
+}
+
 /// Free any `*mut c_char` returned by this library.
 ///
 /// # Safety

@@ -1,0 +1,55 @@
+name: Build iOS 27 Fix IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/ios27-posterboard-registry
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios,aarch64-apple-ios-sim
+
+      - name: Install XcodeGen
+        run: |
+          brew install xcodegen
+          xcodegen --version
+
+      - name: Build AirliftFFI
+        env:
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+        run: ./build-ios.sh
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build unsigned IPA
+        env:
+          DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+        run: ./build-ipa.sh Release
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: AirCard-iOS-iOS27-PosterBoard-Fix
+          path: build/AirCard-iOS.ipa
+          if-no-files-found: error
+          retention-days: 14
