@@ -562,6 +562,10 @@ public final class TendiesEngine {
             return value
         }
 
+        if let metadataID = descriptorIdentifierFromSuggestionMetadata(in: folderURL) {
+            return metadataID
+        }
+
         let fileManager = FileManager.default
         if let enumerator = fileManager.enumerator(
             at: folderURL,
@@ -600,6 +604,53 @@ public final class TendiesEngine {
         }
 
         return String(fallbackID)
+    }
+
+    private func descriptorIdentifierFromSuggestionMetadata(in folderURL: URL) -> String? {
+        let fileManager = FileManager.default
+        guard let enumerator = fileManager.enumerator(
+            at: folderURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return nil
+        }
+
+        while let url = enumerator.nextObject() as? URL {
+            guard url.lastPathComponent ==
+                    "com.apple.posterkit.provider.identifierURL.suggestionMetadata.plist",
+                  let data = try? Data(contentsOf: url),
+                  let object = try? PropertyListSerialization.propertyList(
+                    from: data,
+                    options: [],
+                    format: nil
+                  ) else {
+                continue
+            }
+
+            let strings = collectStrings(in: object)
+            for value in strings {
+                let prefix = value.split(separator: ".").first.map(String.init) ?? value
+                if prefix.count >= 3 && prefix.allSatisfy({ $0.isNumber }) {
+                    return prefix
+                }
+            }
+        }
+
+        return nil
+    }
+
+    private func collectStrings(in object: Any) -> [String] {
+        if let string = object as? String {
+            return [string]
+        }
+        if let array = object as? [Any] {
+            return array.flatMap { collectStrings(in: $0) }
+        }
+        if let dict = object as? [String: Any] {
+            return Array(dict.keys) + dict.values.flatMap { collectStrings(in: $0) }
+        }
+        return []
     }
 
     private func inferProvider(in folderURL: URL, fallback: String) -> String {
