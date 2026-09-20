@@ -166,7 +166,12 @@ This snapshot was captured before rebuilding the PosterBoard registry.
         guard sqlite3_open_v2(dbURL.path, &db, flags, nil) == SQLITE_OK, let db else {
             throw PosterBoardRecoveryError.sqlite("sqlite3_open_v2 failed")
         }
-        defer { sqlite3_close(db) }
+        var didClose = false
+        defer {
+            if !didClose {
+                sqlite3_close(db)
+            }
+        }
 
         try exec(db, "PRAGMA journal_mode=DELETE;")
         try exec(db, "PRAGMA synchronous=FULL;")
@@ -192,6 +197,7 @@ INSERT INTO posterMetadata VALUES ('deviceClass','0');
         }
 
         sqlite3_close(db)
+        didClose = true
         return try Data(contentsOf: dbURL)
     }
 
