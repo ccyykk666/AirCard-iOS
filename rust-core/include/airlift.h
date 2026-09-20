@@ -109,6 +109,20 @@ int32_t al_exploit_inject_folder(const char *pairing_path,
                                  void *ctx,
                                  char **out_error);
 
+
+// Read a file from outside the Media sandbox through AirTraffic.
+// On success, free *out_data with al_afc_free_bytes(*out_data, *out_len).
+int32_t al_airlift_extract(const char *pairing_path,
+                           const char *device_path,
+                           ALLogCallback log_cb,
+                           void *ctx,
+                           uint8_t **out_data,
+                           size_t *out_len,
+                           char **out_error);
+
+// Free a byte buffer returned by al_airlift_extract.
+void al_afc_free_bytes(uint8_t *ptr, size_t len);
+
 // ---------------------------------------------------------------------------
 // Syslog Stream / Live Card Detection
 // ---------------------------------------------------------------------------
