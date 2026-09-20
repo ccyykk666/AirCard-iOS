@@ -573,11 +573,12 @@ public final class TendiesEngine {
 
                 if name.hasSuffix("Wallpaper.plist"),
                    let data = try? Data(contentsOf: url),
-                   let plist = try? PropertyListSerialization.propertyList(
+                   let object = try? PropertyListSerialization.propertyList(
                         from: data,
                         options: [],
                         format: nil
-                   ) as? [String: Any] {
+                   ),
+                   let plist = object as? [String: Any] {
                     if let id = plist["identifier"] as? Int {
                         return String(id)
                     }
